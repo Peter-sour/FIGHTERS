@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mood Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1e2936;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        
+        h1 {
+            margin-bottom: 40px;
+        }
+        
+        .mood-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            max-width: 600px;
+        }
+        
+        .mood-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .mood-option:hover {
+            transform: scale(1.1);
+        }
+        
+        .mood-emoji {
+            font-size: 40px;
+            margin-bottom: 10px;
+            border: 3px solid transparent;
+            border-radius: 50%;
+            padding: 5px;
+        }
+        
+        .mood-name {
+            font-size: 14px;
+        }
+        
+        .selected .mood-emoji {
+            border-color: #4a7aff;
+        }
+        
+        .track-button {
+            background-color: #5b68f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .track-button:hover {
+            background-color: #4a5ced;
+        }
+        
+        .track-button:disabled {
+            background-color: #3d4267;
+            cursor: not-allowed;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        
+        .modal-content {
+            background-color: #2a3950;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 80%;
+            text-align: center;
+            position: relative;
+        }
+        
+        .close-button {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: white;
+        }
+        
+        .modal-emoji {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+        
+        .modal-message {
+            font-size: 18px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+        
+        .modal-tip {
+            font-size: 16px;
+            font-style: italic;
+            color: #a8b6cc;
+        }
+    </style>
+</head>
+<body>
+    <h1>How are you feeling today?</h1>
+    
+    <div class="mood-container">
+        <div class="mood-option" data-mood="Happy">
+            <div class="mood-emoji">😊</div>
+            <div class="mood-name">Happy</div>
+        </div>
+        <div class="mood-option" data-mood="Okay">
+            <div class="mood-emoji">😐</div>
+            <div class="mood-name">Okay</div>
+        </div>
+        <div class="mood-option" data-mood="Sad">
+            <div class="mood-emoji">😔</div>
+            <div class="mood-name">Sad</div>
+        </div>
+        <div class="mood-option" data-mood="Stressed">
+            <div class="mood-emoji">😫</div>
+            <div class="mood-name">Stressed</div>
+        </div>
+        <div class="mood-option" data-mood="Anxious">
+            <div class="mood-emoji">😨</div>
+            <div class="mood-name">Anxious</div>
+        </div>
+        <div class="mood-option" data-mood="Tired">
+            <div class="mood-emoji">😴</div>
+            <div class="mood-name">Tired</div>
+        </div>
+    </div>
+    
+    <button class="track-button" id="trackButton" disabled>Track My Mood</button>
+    
+    <div class="modal" id="moodModal">
+        <div class="modal-content">
+            <button class="close-button">&times;</button>
+            <div class="modal-emoji" id="modalEmoji"></div>
+            <h2 id="modalTitle">Your Mood: </h2>
+            <p class="modal-message" id="modalMessage"></p>
+            <p class="modal-tip" id="modalTip"></p>
+        </div>
+    </div>
+    
+    <script>
+        // Mood data with messages and tips
+        const moodData = {
+            "Happy": {
+                emoji: "😊",
+                messages: [
+                    "Your happiness brightens everyone's day! Keep that positive energy flowing!",
+                    "It's wonderful to see you happy! Celebrate the little joys today.",
+                    "Your positive mood is contagious! Spread that happiness around!"
+                ],
+                tips: [
+                    "Take a moment to appreciate what made you happy today.",
+                    "Share your joy with someone else to multiply it.",
+                    "Journal about this happy moment to revisit later."
+                ]
+            },
+            "Okay": {
+                emoji: "😐",
+                messages: [
+                    "Feeling okay is perfectly fine! Take it one step at a time.",
+                    "Steady and balanced - that's a good foundation for your day.",
+                    "Sometimes 'okay' is exactly where we need to be."
+                ],
+                tips: [
+                    "Consider one small thing that might boost your mood a little.",
+                    "Try a quick walk or stretch to refresh your energy.",
+                    "Reflect on what would help you feel more than just okay."
+                ]
+            },
+            "Sad": {
+                emoji: "😔",
+                messages: [
+                    "It's okay to feel sad. Your feelings are valid and important.",
+                    "Sadness is part of being human. Be gentle with yourself today.",
+                    "Remember that this feeling, like all feelings, will pass."
+                ],
+                tips: [
+                    "Try reaching out to someone you trust to talk about how you feel.",
+                    "Do something small and comforting for yourself right now.",
+                    "Practice self-compassion - treat yourself as you would a good friend."
+                ]
+            },
+            "Stressed": {
+                emoji: "😫",
+                messages: [
+                    "Take a deep breath. You're doing the best you can.",
+                    "Stress is a sign that you care, but remember to care for yourself too.",
+                    "One step at a time - you don't have to solve everything at once."
+                ],
+                tips: [
+                    "Try the 4-7-8 breathing technique: inhale for 4, hold for 7, exhale for 8.",
+                    "Break down what's stressing you into smaller, manageable tasks.",
+                    "Schedule a short break to reset your mind."
+                ]
+            },
+            "Anxious": {
+                emoji: "😨",
+                messages: [
+                    "You're stronger than your anxiety. Take it one moment at a time.",
+                    "Your feelings are real, but they don't define you or your capabilities.",
+                    "Remember to ground yourself in the present moment."
+                ],
+                tips: [
+                    "Try the 5-4-3-2-1 technique: name 5 things you see, 4 you feel, 3 you hear, 2 you smell, and 1 you taste.",
+                    "Focus on what you can control right now, even if it's just your breath.",
+                    "Consider writing down your worries to get them out of your head."
+                ]
+            },
+            "Tired": {
+                emoji: "😴",
+                messages: [
+                    "Rest is not a luxury, it's essential. Honor your body's needs.",
+                    "It's okay to slow down when you need to. Your wellbeing matters.",
+                    "Tiredness is your body communicating with you - try to listen."
+                ],
+                tips: [
+                    "Even a 10-minute power nap can help restore your energy.",
+                    "Check in with yourself about what kind of tired you are - physical, mental, or emotional?",
+                    "Consider what you might need to remove from your plate today."
+                ]
+            }
+        };
+        
+        // DOM elements
+        const moodOptions = document.querySelectorAll('.mood-option');
+        const trackButton = document.getElementById('trackButton');
+        const modal = document.getElementById('moodModal');
+        const closeButton = document.querySelector('.close-button');
+        const modalEmoji = document.getElementById('modalEmoji');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalTip = document.getElementById('modalTip');
+        
+        let selectedMood = null;
+        
+        // Select mood
+        moodOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                // Remove selected class from all options
+                moodOptions.forEach(opt => opt.classList.remove('selected'));
+                
+                // Add selected class to clicked option
+                option.classList.add('selected');
+                
+                // Store selected mood
+                selectedMood = option.getAttribute('data-mood');
+                
+                // Enable track button
+                trackButton.disabled = false;
+            });
+        });
+        
+        // Track mood button click
+        trackButton.addEventListener('click', () => {
+            if (selectedMood) {
+                const moodInfo = moodData[selectedMood];
+                
+                // Randomly select a message and tip
+                const randomMessage = moodInfo.messages[Math.floor(Math.random() * moodInfo.messages.length)];
+                const randomTip = moodInfo.tips[Math.floor(Math.random() * moodInfo.tips.length)];
+                
+                // Update modal content
+                modalEmoji.textContent = moodInfo.emoji;
+                modalTitle.textContent = `Your Mood: ${selectedMood}`;
+                modalMessage.textContent = randomMessage;
+                modalTip.textContent = `Tip: ${randomTip}`;
+                
+                // Show modal
+                modal.style.display = 'flex';
+            }
+        });
+        
+        // Close modal
+        closeButton.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+        
+        // Close modal when clicking outside
+        window.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
